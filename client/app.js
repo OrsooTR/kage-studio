@@ -682,21 +682,36 @@
     //  Graph (Flow-style easing editor)
     // =========================================================
     var GR_BUILTIN = [
-        { name: "Linear", c: [0.33, 0.33, 0.66, 0.66] },
-        { name: "Ease", c: [0.4, 0, 0.6, 1] },
-        { name: "Ease In", c: [0.42, 0, 1, 1] },
-        { name: "Ease Out", c: [0, 0, 0.58, 1] },
-        { name: "Smooth", c: [0.45, 0.05, 0.55, 0.95] },
-        { name: "Snappy", c: [0.85, 0, 0.15, 1] },
-        { name: "Slow Mo", c: [0.7, 0, 0.3, 1] },
-        { name: "Anticipate", c: [0.5, -0.25, 0.6, 1] },
-        { name: "Overshoot", c: [0.35, 0, 0.35, 1.35] },
-        { name: "Quick Out", c: [0.16, 1, 0.3, 1] }
+        { name: "linear", c: [0, 0, 1, 1] },
+        { name: "easeIn", c: [0.42, 0, 1, 1] },
+        { name: "easeOut", c: [0, 0, 0.58, 1] },
+        { name: "ease", c: [0.25, 0.1, 0.25, 1] },
+        { name: "quadIn", c: [0.11, 0, 0.5, 0] },
+        { name: "quadOut", c: [0.5, 1, 0.89, 1] },
+        { name: "quad", c: [0.45, 0, 0.55, 1] },
+        { name: "cubicIn", c: [0.32, 0, 0.67, 0] },
+        { name: "cubicOut", c: [0.33, 1, 0.68, 1] },
+        { name: "cubic", c: [0.65, 0, 0.35, 1] },
+        { name: "quartIn", c: [0.5, 0, 0.75, 0] },
+        { name: "quartOut", c: [0.25, 1, 0.5, 1] },
+        { name: "quart", c: [0.76, 0, 0.24, 1] },
+        { name: "quintIn", c: [0.64, 0, 0.78, 0] },
+        { name: "quintOut", c: [0.22, 1, 0.36, 1] },
+        { name: "quint", c: [0.83, 0, 0.17, 1] },
+        { name: "expoIn", c: [0.7, 0, 0.84, 0] },
+        { name: "expoOut", c: [0.16, 1, 0.3, 1] },
+        { name: "expo", c: [0.87, 0, 0.13, 1] },
+        { name: "circIn", c: [0.55, 0, 1, 0.45] },
+        { name: "circOut", c: [0, 0.55, 0.45, 1] },
+        { name: "circ", c: [0.85, 0, 0.15, 1] },
+        { name: "backIn", c: [0.36, 0, 0.66, -0.56] },
+        { name: "backOut", c: [0.34, 1.56, 0.64, 1] },
+        { name: "back", c: [0.68, -0.6, 0.32, 1.6] }
     ];
-    var grCurve = [0.4, 0, 0.6, 1], grDragH = 0, grReady = false;
+    var grCurve = [0.25, 0.1, 0.25, 1], grDragH = 0, grReady = false;
 
     function grClamp01(n) { return Math.max(0, Math.min(1, n)); }
-    function grClampY(n) { return Math.max(-0.3, Math.min(1.3, n)); }
+    function grClampY(n) { return Math.max(-0.4, Math.min(1.4, n)); }
     function grRound(n) { return Math.round(n * 100) / 100; }
     function grPx(nx) { return 40 + nx * 200; }
     function grPy(ny) { return 240 - ny * 200; }
@@ -737,15 +752,15 @@
     }
     function grAllPresets() { return GR_BUILTIN.concat(settings.graphPresets || []); }
     function grMiniPath(c) {
-        function mx(n) { return 4 + n * 32; } function my(n) { return 30 - n * 24; }
-        return "M4 30 C " + mx(c[0]) + " " + my(c[1]) + " " + mx(c[2]) + " " + my(c[3]) + " 36 6";
+        function mx(n) { return 4 + n * 32; } function my(n) { return 28 - n * 20; }
+        return "M4 28 C " + mx(c[0]) + " " + my(c[1]) + " " + mx(c[2]) + " " + my(c[3]) + " 36 8";
     }
     function grRenderPresets() {
         var wrap = $("gr-presets"); wrap.innerHTML = "";
         grAllPresets().forEach(function (p, idx) {
             var isUser = idx >= GR_BUILTIN.length;
             var d = el("div", "gr-preset"); d.title = p.name;
-            d.innerHTML = '<svg viewBox="0 0 40 36"><path class="gp-mini" d="' + grMiniPath(p.c) + '"/></svg>';
+            d.innerHTML = '<svg viewBox="0 -8 40 52"><path class="gp-mini" d="' + grMiniPath(p.c) + '"/></svg>';
             var nm = el("span", "gp-name"); nm.textContent = p.name; d.appendChild(nm);
             d.onclick = function () { grCurve = p.c.slice(); grRender(); saveSettings(); };
             if (isUser) {

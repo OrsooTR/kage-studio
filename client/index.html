@@ -159,7 +159,7 @@
         <div id="view-graph" class="view hidden">
             <main id="graph-content">
                 <div class="gr-editor">
-                    <svg id="gr-svg" viewBox="0 0 280 280" preserveAspectRatio="xMidYMid meet">
+                    <svg id="gr-svg" viewBox="0 -40 280 360" preserveAspectRatio="xMidYMid meet">
                         <defs>
                             <linearGradient id="gr-curve-grad" x1="0" y1="1" x2="1" y2="0">
                                 <stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/>
@@ -183,23 +183,23 @@
                     </svg>
                 </div>
 
-                <div class="gr-vals">
-                    <span class="gr-val-pair">P1 <input id="gr-x1" class="gr-num" type="number" step="0.01" /> <input id="gr-y1" class="gr-num" type="number" step="0.01" /></span>
-                    <span class="gr-val-pair">P2 <input id="gr-x2" class="gr-num" type="number" step="0.01" /> <input id="gr-y2" class="gr-num" type="number" step="0.01" /></span>
+                <div class="gr-valbar">
+                    <input id="gr-x1" class="gr-num" type="number" step="0.01" title="x1" />
+                    <input id="gr-y1" class="gr-num" type="number" step="0.01" title="y1" />
+                    <input id="gr-x2" class="gr-num" type="number" step="0.01" title="x2" />
+                    <input id="gr-y2" class="gr-num" type="number" step="0.01" title="y2" />
                 </div>
 
-                <div class="gr-presets-head">
-                    <span class="set-label" style="margin:0;"><svg class="ic"><use href="#i-graph"/></svg> Presets</span>
+                <button id="gr-apply" class="gr-apply">APPLY</button>
+
+                <div class="gr-pre-head">
+                    <span class="gr-pre-title">Presets</span>
+                    <div class="gr-save">
+                        <input id="gr-name" type="text" placeholder="name…" autocomplete="off" spellcheck="false" />
+                        <button id="gr-save" class="gr-add" title="Save current curve as preset">+</button>
+                    </div>
                 </div>
                 <div id="gr-presets" class="gr-presets"></div>
-
-                <div class="gr-save-row">
-                    <input id="gr-name" type="text" placeholder="Save current curve as…" autocomplete="off" spellcheck="false" />
-                    <button id="gr-save" class="ghost-btn"><svg class="ic"><use href="#i-save"/></svg> Save</button>
-                </div>
-
-                <button id="gr-apply" class="wide-btn run-btn"><svg class="ic"><use href="#i-graph"/></svg> Apply to selected keyframes</button>
-                <p class="muted tiny" style="margin-top:10px;">Select two or more keyframes in your After Effects timeline, shape the curve (drag the dots), then Apply — just like the Flow plugin.</p>
             </main>
         </div>
 
