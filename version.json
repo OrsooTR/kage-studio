@@ -1,5 +1,5 @@
 {
-    "version":  "2.1.2",
-    "notes":  "Fix update feed (no BOM) + BOM tolerance",
+    "version":  "2.1.3",
+    "notes":  "Thumbnail ridisegnate: film grain, vignette e titolo curato in stile Kage",
     "zip":  "https://github.com/OrsooTR/kage-studio/archive/refs/heads/main.zip"
 }
