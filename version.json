@@ -1,5 +1,5 @@
-﻿{
-    "version":  "2.1.1",
-    "notes":  "Cover personalizzati per ogni anime (frame reale) + redesign thumbnail",
+{
+    "version":  "2.1.2",
+    "notes":  "Fix update feed (no BOM) + BOM tolerance",
     "zip":  "https://github.com/OrsooTR/kage-studio/archive/refs/heads/main.zip"
 }

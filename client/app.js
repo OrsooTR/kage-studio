@@ -809,7 +809,9 @@
         return false;
     }
     function extRoot() { try { return cs.getSystemPath(SystemPath.EXTENSION); } catch (e) { return null; } }
-    function readUpdateCfg() { try { var r = extRoot(); return r ? JSON.parse(fs.readFileSync(path.join(r, "update.json"), "utf8")) : null; } catch (e) { return null; } }
+    function stripBom(s) { return String(s).charCodeAt(0) === 0xFEFF ? String(s).slice(1) : String(s); }
+    function parseJSON(s) { return JSON.parse(stripBom(s)); }
+    function readUpdateCfg() { try { var r = extRoot(); return r ? parseJSON(fs.readFileSync(path.join(r, "update.json"), "utf8")) : null; } catch (e) { return null; } }
     function kageShared() { return path.join(os.homedir(), "AppData", "Roaming", "KageStudio"); }
     var pendingUpdate = null;
     function checkForUpdate() {
@@ -818,7 +820,7 @@
         var feed = "https://raw.githubusercontent.com/" + cfg.repo + "/main/version.json?t=" + Date.now();
         request(feed).then(function (res) {
             if (res.status !== 200) return;
-            var info; try { info = JSON.parse(res.body.toString("utf8")); } catch (e) { return; }
+            var info; try { info = parseJSON(res.body.toString("utf8")); } catch (e) { return; }
             if (info && info.version && semverGt(info.version, cfg.version || "0.0.0")) {
                 if (!info.zip) info.zip = "https://github.com/" + cfg.repo + "/archive/refs/heads/main.zip";
                 pendingUpdate = info;
