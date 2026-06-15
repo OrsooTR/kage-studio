@@ -166,8 +166,12 @@
         setStatus(statusEl, null);
         items.forEach(function (it, idx) {
             var card = el("div", "card pack"); stagger(card, idx);
-            var img = el("img", "thumb"); img.referrerPolicy = "no-referrer"; img.loading = "lazy"; img.alt = ""; img.src = packThumb(it);
-            img.onerror = function () { img.remove(); card.insertBefore(makeFallback("film"), card.firstChild); };
+            var img = el("img", "thumb"); img.referrerPolicy = "no-referrer"; img.loading = "lazy"; img.alt = "";
+            // Our own cover = a real frame from one of the anime's clips (bundled in covers/).
+            // Fall back to the site's cover, then to an icon, if a cover hasn't been generated.
+            var triedRemote = false;
+            img.onerror = function () { if (!triedRemote) { triedRemote = true; img.src = packThumb(it); } else { img.remove(); card.insertBefore(makeFallback("film"), card.firstChild); } };
+            img.src = "covers/" + it.s + ".jpg";
             card.appendChild(img); card.appendChild(el("div", "grad")); card.appendChild(makeBadge(it._kind === "movie" ? "Movie" : "Series")); card.appendChild(makeLabel(it.t));
             card.onclick = function () { openPack(it); }; grid.appendChild(card);
         });

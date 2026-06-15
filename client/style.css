@@ -219,6 +219,40 @@ html, body {
 .card .preview-btn:hover { background: var(--accent); border-color: transparent; transform: scale(1.08); }
 .card .preview-btn .ic { width: 13px; height: 13px; }
 
+/* ---------- Kage custom clip thumbnails ---------- */
+/* A real frame of the clip + our own design: branded scrim, display-font caption,
+   corner wordmark and an accent stripe — applied to clip cards only. */
+.card.clip .grad,
+.card.pack .grad {
+    background:
+        linear-gradient(to top, rgba(6,5,12,0.94) 0%, rgba(6,5,12,0.42) 34%, rgba(6,5,12,0) 64%),
+        linear-gradient(to top, var(--accent-soft), transparent 46%);
+}
+.card.clip .label,
+.card.pack .label {
+    font-family: var(--font-display); font-weight: 600; font-size: 11.5px; line-height: 1.28;
+    letter-spacing: 0.1px; padding: 10px 11px 11px;
+    white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+}
+/* corner wordmark — the signature that makes the thumbnail "ours" */
+.card.clip::after {
+    content: "KAGE"; position: absolute; top: 7px; left: 8px; z-index: 3;
+    font-family: var(--font-display); font-weight: 700; font-size: 8px; letter-spacing: 1.6px;
+    color: #fff; opacity: 0.5; text-shadow: 0 1px 5px rgba(0,0,0,0.75);
+    pointer-events: none; transition: opacity 0.2s;
+}
+.card.clip:hover::after { opacity: 0.92; }
+/* accent stripe along the bottom edge — grows on hover / when selected */
+.card.clip::before,
+.card.pack::before {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 4;
+    background: var(--accent-grad); transform: scaleX(0); transform-origin: left center;
+    transition: transform 0.32s var(--ease); pointer-events: none;
+}
+.card.clip:hover::before, .card.clip.selected::before,
+.card.pack:hover::before { transform: scaleX(1); }
+
 /* skeleton loading */
 .skeleton { position: relative; overflow: hidden; background: var(--surface-2); }
 .skeleton::after {

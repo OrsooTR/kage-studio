@@ -1,5 +1,5 @@
-{
-  "version": "2.1.0",
-  "notes": "Added Graph tab (Flow-style easing) + auto-update",
-  "zip": "https://github.com/OrsooTR/kage-studio/archive/refs/heads/main.zip"
+﻿{
+    "version":  "2.1.1",
+    "notes":  "Cover personalizzati per ogni anime (frame reale) + redesign thumbnail",
+    "zip":  "https://github.com/OrsooTR/kage-studio/archive/refs/heads/main.zip"
 }
