@@ -553,8 +553,23 @@
         var rel = asFolder.substring(asRoot.length).replace(/^[\\\/]+/, ""), parts = rel.split(/[\\\/]/), acc = asRoot;
         parts.forEach(function (p, i) { acc = path.join(acc, p); var sep = el("span", "sep"); sep.textContent = "/"; bc.appendChild(sep); var isLast = i === parts.length - 1; var c = el("span", isLast ? "current" : "crumb"); c.textContent = p; if (!isLast) { var target = acc; c.onclick = function () { loadAssets(target); }; } bc.appendChild(c); });
     }
+    // Lazy-load asset thumbnails: only load near-viewport ones, and UNLOAD videos when
+    // they scroll away so the GPU isn't decoding hundreds of clips at once.
+    var asThumbObs = null;
+    function ensureAsObs() {
+        if (asThumbObs || !("IntersectionObserver" in window)) return asThumbObs;
+        asThumbObs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) {
+                var t = e.target;
+                if (e.isIntersecting) { if (t.dataset.lazysrc && !t.getAttribute("src")) t.src = t.dataset.lazysrc; }
+                else if (t.tagName === "VIDEO" && t.getAttribute("src")) { try { t.pause(); } catch (x) {} t.removeAttribute("src"); try { t.load(); } catch (x) {} }
+            });
+        }, { root: $("assets-content"), rootMargin: "250px" });
+        return asThumbObs;
+    }
+    function asObserve(elm) { var o = ensureAsObs(); if (o) o.observe(elm); else elm.src = elm.dataset.lazysrc; }
     function renderAssets() {
-        var g = $("as-grid"); g.innerHTML = "";
+        var g = $("as-grid"); if (asThumbObs) asThumbObs.disconnect(); g.innerHTML = "";
         var files = asItems.files.filter(function (f) { return asFilter === "all" || f.cat === asFilter; });
         var showDirs = asFilter === "all" ? asItems.dirs : [];
         footer.classList.toggle("hidden", activeView !== "assets" || !(showDirs.length || files.length));
@@ -569,8 +584,8 @@
         files.forEach(function (f) {
             var card = el("div", "card asset"); stagger(card, idx++); card.dataset.path = f.path;
             if (asSel.map[f.path]) card.classList.add("selected");
-            if (f.cat === "image") { var img = el("img", "thumb"); img.referrerPolicy = "no-referrer"; img.loading = "lazy"; img.src = fileUrl(f.path); img.onerror = function () { img.remove(); card.insertBefore(makeFallback("image"), card.firstChild); }; card.appendChild(img); }
-            else if (f.cat === "video") { var v = el("video", "thumb"); v.muted = true; v.playsInline = true; v.preload = "metadata"; v.src = fileUrl(f.path) + "#t=0.5"; card.appendChild(v); enableHoverPlayAsset(card, v); }
+            if (f.cat === "image") { var img = el("img", "thumb"); img.referrerPolicy = "no-referrer"; img.dataset.lazysrc = fileUrl(f.path); img.onerror = function () { img.remove(); card.insertBefore(makeFallback("image"), card.firstChild); }; card.appendChild(img); asObserve(img); }
+            else if (f.cat === "video") { var v = el("video", "thumb"); v.muted = true; v.playsInline = true; v.preload = "metadata"; v.dataset.lazysrc = fileUrl(f.path) + "#t=0.5"; card.appendChild(v); enableHoverPlayAsset(card, v); asObserve(v); }
             else card.appendChild(makeFallback(f.cat === "audio" ? "volume" : (f.cat === "3d" ? "cube" : "file")));
             card.appendChild(el("div", "grad"));
             if (f.cat !== "other") card.appendChild(makeBadge(f.cat === "3d" ? "3D" : f.cat));
@@ -583,7 +598,7 @@
         updateSelInfo();
     }
     function enableHoverPlayAsset(card, v) {
-        card.addEventListener("mouseenter", function () { try { v.loop = true; v.currentTime = 0; v.play().catch(function () {}); } catch (e) {} });
+        card.addEventListener("mouseenter", function () { try { if (!v.getAttribute("src") && v.dataset.lazysrc) v.src = v.dataset.lazysrc; v.loop = true; v.currentTime = 0; v.play().catch(function () {}); } catch (e) {} });
         card.addEventListener("mouseleave", function () { try { v.pause(); } catch (e) {} });
     }
     function asToggle(f) {

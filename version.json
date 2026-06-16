@@ -1,5 +1,5 @@
 {
-    "version":  "2.1.5",
-    "notes":  "Fix: Graph easing now matches the drawn curve exactly (corrected handle/influence math)",
+    "version":  "2.1.6",
+    "notes":  "Assets: lazy-load thumbnails (fixes heavy lag and GPU load on large folders)",
     "zip":  "https://github.com/OrsooTR/kage-studio/archive/refs/heads/main.zip"
 }
