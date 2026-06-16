@@ -1,5 +1,5 @@
 {
-    "version":  "2.1.6",
-    "notes":  "Assets: lazy-load thumbnails (fixes heavy lag and GPU load on large folders)",
+    "version":  "2.1.7",
+    "notes":  "Assets: always show the Import bar when an asset is selected",
     "zip":  "https://github.com/OrsooTR/kage-studio/archive/refs/heads/main.zip"
 }

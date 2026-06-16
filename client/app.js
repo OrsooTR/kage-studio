@@ -231,7 +231,12 @@
         updateSelInfo(); if (!lb.classList.contains("hidden")) updateLightboxSelectBtn();
     }
     function clearSelection() { sel.map = {}; sel.order = []; Array.prototype.forEach.call(grid.querySelectorAll(".card.clip.selected"), function (c) { c.classList.remove("selected"); }); updateSelInfo(); if (!lb.classList.contains("hidden")) updateLightboxSelectBtn(); }
-    function updateSelInfo() { var s = activeView === "assets" ? asSel : sel; selcount.textContent = s.order.length; btnImport.disabled = s.order.length === 0; }
+    function updateSelInfo() {
+        var s = activeView === "assets" ? asSel : sel;
+        selcount.textContent = s.order.length; btnImport.disabled = s.order.length === 0;
+        // Make sure the Import bar is reachable whenever something is selected.
+        if (s.order.length && (activeView === "assets" || activeView === "clips")) footer.classList.remove("hidden");
+    }
 
     // =========================================================
     //  Lightbox (clips preview)
