@@ -1,5 +1,5 @@
 {
-    "version":  "2.1.4",
-    "notes":  "Cleaner, Flow-style Graph editor with the full easing preset library",
+    "version":  "2.1.5",
+    "notes":  "Fix: Graph easing now matches the drawn curve exactly (corrected handle/influence math)",
     "zip":  "https://github.com/OrsooTR/kage-studio/archive/refs/heads/main.zip"
 }

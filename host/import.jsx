@@ -203,10 +203,16 @@ function acl_easeProp(prop, sel, x1, y1, x2, y2) {
         try { curIn1 = prop.keyInTemporalEase(k1); teDim = curIn1.length; } catch (e) { teDim = 1; }
         try { curOut2 = prop.keyOutTemporalEase(k2); } catch (e) {}
 
-        var outInfluence = acl_clampInf(x1 * 100);
-        var inInfluence = acl_clampInf((1 - x2) * 100);
-        var slopeOut = y1 / x1;            // tangent of the bezier at the start
-        var slopeIn = (1 - y2) / (1 - x2); // tangent at the end
+        // Clamp the bezier x's to AE's influence range (0.1%..100%) and use the SAME
+        // value for influence AND slope, so the handle length (speed*influence*dt = y*dv)
+        // stays exact. (Using different clamps for influence vs slope made edge handles —
+        // x1->0 or x2->1 — overshoot ~10x, which broke the curve in AE.)
+        var ox1 = Math.max(0.001, Math.min(1, x1));
+        var ox2 = Math.max(0, Math.min(0.999, x2));
+        var outInfluence = ox1 * 100;            // 0.1 .. 100
+        var inInfluence = (1 - ox2) * 100;       // 0.1 .. 100
+        var slopeOut = y1 / ox1;                 // tangent of the bezier at the start
+        var slopeIn = (1 - y2) / (1 - ox2);      // tangent at the end
 
         var inEase1 = [], outEase1 = [], inEase2 = [], outEase2 = [];
         for (var d = 0; d < teDim; d++) {
