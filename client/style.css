@@ -268,6 +268,10 @@ html, body {
 .card.clip:hover::before, .card.clip.selected::before,
 .card.pack:hover::before { transform: scaleX(1); }
 
+.set-legal { margin-top: 8px; }
+.set-legal a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.set-legal a:hover { color: var(--accent-2); }
+
 /* skeleton loading */
 .skeleton { position: relative; overflow: hidden; background: var(--surface-2); }
 .skeleton::after {

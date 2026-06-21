@@ -1,5 +1,5 @@
 {
-    "version":  "2.1.7",
-    "notes":  "Assets: always show the Import bar when an asset is selected",
+    "version":  "2.1.8",
+    "notes":  "Terms and Privacy acceptance on sign-up, plus Terms/Privacy links in the app and panel",
     "zip":  "https://github.com/OrsooTR/kage-studio/archive/refs/heads/main.zip"
 }

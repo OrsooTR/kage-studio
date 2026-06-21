@@ -922,6 +922,8 @@
         $("link-ffmpeg").onclick = function (e) { e.preventDefault(); openURL("https://www.gyan.dev/ffmpeg/builds/"); };
         $("link-esrgan").onclick = function (e) { e.preventDefault(); openURL("https://github.com/xinntao/Real-ESRGAN/releases"); };
         $("link-rife").onclick = function (e) { e.preventDefault(); openURL("https://github.com/nihui/rife-ncnn-vulkan/releases"); };
+        $("link-terms").onclick = function (e) { e.preventDefault(); openURL("https://orsootr.github.io/kage-studio-site/terms.html"); };
+        $("link-privacy").onclick = function (e) { e.preventDefault(); openURL("https://orsootr.github.io/kage-studio-site/privacy.html"); };
 
         $("btn-import").onclick = function () { if (activeView === "assets") importAssets(); else importSelection(); };
         $("btn-clearsel").onclick = function () { if (activeView === "assets") asClear(); else clearSelection(); };

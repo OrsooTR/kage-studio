@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtensionManifest Version="9.0" ExtensionBundleId="studio.kage"
-    ExtensionBundleVersion="2.1.7"
+    ExtensionBundleVersion="2.1.8"
     ExtensionBundleName="Kage Studio"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ExtensionList>
-        <Extension Id="studio.kage.panel" Version="2.1.7" />
+        <Extension Id="studio.kage.panel" Version="2.1.8" />
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>
