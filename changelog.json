@@ -1,0 +1,13 @@
+{
+  "releases": [
+    { "version": "2.1.8", "date": "2026-06-21", "notes": "Accept Terms & Privacy on sign-up, plus Terms/Privacy links in the app and panel." },
+    { "version": "2.1.7", "date": "2026-06-21", "notes": "Assets: the Import bar now always appears when an asset is selected." },
+    { "version": "2.1.6", "date": "2026-06-21", "notes": "Assets: lazy-loaded thumbnails — no more lag or GPU spikes on large folders." },
+    { "version": "2.1.5", "date": "2026-06-21", "notes": "Graph: easing now matches the curve you draw exactly (fixed handle/influence math)." },
+    { "version": "2.1.4", "date": "2026-06-21", "notes": "Cleaner, Flow-style Graph editor with the full easing preset library." },
+    { "version": "2.1.3", "date": "2026-06-21", "notes": "Redesigned thumbnails: film grain, a vignette and a refined title, Kage style." },
+    { "version": "2.1.2", "date": "2026-06-21", "notes": "Fixed the automatic update feed." },
+    { "version": "2.1.1", "date": "2026-06-21", "notes": "Custom library covers — a real frame from each anime, with a dedicated design." },
+    { "version": "2.1.0", "date": "2026-06-21", "notes": "New Graph tab (Flow-style easing) and automatic updates." }
+  ]
+}
