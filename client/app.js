@@ -671,6 +671,7 @@
         if (typeof s.openAfter !== "boolean") s.openAfter = false;
         if (s.bgDim == null) s.bgDim = 55; if (s.bgBlur == null) s.bgBlur = 0;
         if (!s.ffmpeg) s.ffmpeg = ""; if (!s.realesrgan) s.realesrgan = ""; if (!s.rife) s.rife = "";
+        if (!s.python) s.python = "python";
         if (!s.graphPresets) s.graphPresets = [];
         return s;
     }
@@ -690,6 +691,7 @@
         $("accent-color").value = settings.accent || DEFAULT_ACCENT;
         $("bg-path").value = settings.bgPath || ""; $("bg-dim").value = settings.bgDim; $("bg-blur").value = settings.bgBlur;
         $("ffmpeg-path").value = settings.ffmpeg || ""; $("realesrgan-path").value = settings.realesrgan || ""; $("rife-path").value = settings.rife || "";
+        $("python-path").value = settings.python || "python";
         buildSwatches(); $("settings-panel").classList.remove("hidden");
     }
     function closeSettings() { $("settings-panel").classList.add("hidden"); }
@@ -879,6 +881,173 @@
     }
 
     // =========================================================
+    //  Effects tab (Kage Trails + FX chain)  — beta, behind a flag
+    // =========================================================
+    // DEV/BETA: tab is visible for local testing. Before a PUBLIC release, gate this behind a
+    // valid licence (and don't ship until the Python engine is packaged for end users).
+    var EFFECTS_BETA = true;
+    try { if (localStorage.getItem("kage_effects_beta") === "0") EFFECTS_BETA = false; } catch (e) {}
+
+    var FX_ORDER = ["chroma", "crt", "lumakey", "wave", "dither", "sort", "glitch", "posterize", "mirror", "displace", "scanroll", "bloom", "invert", "solarize", "edgeglow", "zoomblur", "halftone", "grain"];
+    var FX_DEFS = {
+        chroma: { label: "Chromatic aberration", params: [{ k: "amount", label: "Amount", min: 0, max: 30, step: 1, def: 4 }, { k: "vertical", label: "Vertical", min: 0, max: 20, step: 1, def: 0 }] },
+        crt: { label: "CRT", params: [{ k: "scan", label: "Scanlines", min: 0, max: 1, step: 0.05, def: 0.35 }, { k: "aperture", label: "Aperture", min: 0, max: 0.5, step: 0.02, def: 0.12 }, { k: "gain", label: "Gain", min: 0.5, max: 2, step: 0.02, def: 1.12 }] },
+        lumakey: { label: "Luma key", params: [{ k: "lo", label: "Low", min: 0, max: 1, step: 0.02, def: 0.12 }, { k: "hi", label: "High", min: 0, max: 1, step: 0.02, def: 1 }, { k: "soft", label: "Softness", min: 0, max: 0.5, step: 0.02, def: 0.06 }] },
+        wave: { label: "Wave", params: [{ k: "amp", label: "Amount", min: 0, max: 30, step: 1, def: 7 }, { k: "freq", label: "Frequency", min: 0, max: 0.3, step: 0.005, def: 0.05 }, { k: "axis", label: "Axis", type: "select", options: ["x", "y"], def: "x" }] },
+        dither: { label: "Dither", params: [{ k: "levels", label: "Levels", min: 2, max: 16, step: 1, def: 4 }, { k: "strength", label: "Strength", min: 0, max: 2, step: 0.1, def: 1 }] },
+        sort: { label: "Pixel sort", params: [{ k: "axis", label: "Axis", type: "select", options: ["x", "y"], def: "x" }, { k: "reverse", label: "Reverse", type: "bool", def: false }] },
+        glitch: { label: "Glitch", params: [{ k: "intensity", label: "Intensity", min: 0, max: 60, step: 1, def: 18 }, { k: "slices", label: "Slices", min: 1, max: 30, step: 1, def: 9 }, { k: "channel", label: "Channel", min: 0, max: 20, step: 1, def: 6 }, { k: "seed", label: "Seed", min: 0, max: 99, step: 1, def: 7 }] },
+        posterize: { label: "Posterize", params: [{ k: "levels", label: "Levels", min: 2, max: 12, step: 1, def: 5 }] },
+        mirror: { label: "Mirror", params: [{ k: "axis", label: "Axis", type: "select", options: ["x", "y"], def: "x" }, { k: "side", label: "Side", type: "select", options: ["left", "right"], def: "left" }] },
+        displace: { label: "Displace", params: [{ k: "amount", label: "Amount", min: 0, max: 40, step: 1, def: 10 }, { k: "scale", label: "Scale", min: 0, max: 0.2, step: 0.005, def: 0.03 }] },
+        scanroll: { label: "Scanline roll", params: [{ k: "roll", label: "Roll", min: 0, max: 40, step: 1, def: 14 }, { k: "period", label: "Period", min: 1, max: 30, step: 1, def: 7 }, { k: "scan", label: "Scanlines", min: 0, max: 1, step: 0.05, def: 0.3 }] },
+        bloom: { label: "Bloom", params: [{ k: "threshold", label: "Threshold", min: 0, max: 1, step: 0.02, def: 0.55 }, { k: "radius", label: "Radius", min: 0, max: 30, step: 1, def: 8 }, { k: "strength", label: "Strength", min: 0, max: 3, step: 0.1, def: 1.3 }] },
+        invert: { label: "Invert", params: [] },
+        solarize: { label: "Solarize", params: [{ k: "threshold", label: "Threshold", min: 0, max: 1, step: 0.02, def: 0.5 }] },
+        edgeglow: { label: "Edge glow", params: [{ k: "strength", label: "Strength", min: 0, max: 4, step: 0.1, def: 1.6 }, { k: "radius", label: "Radius", min: 0, max: 12, step: 1, def: 3 }] },
+        zoomblur: { label: "Zoom blur", params: [{ k: "amount", label: "Amount", min: 0, max: 0.3, step: 0.005, def: 0.07 }, { k: "steps", label: "Steps", min: 2, max: 20, step: 1, def: 8 }] },
+        halftone: { label: "Halftone", params: [{ k: "cell", label: "Cell", min: 2, max: 20, step: 1, def: 6 }] },
+        grain: { label: "Grain", params: [{ k: "amount", label: "Amount", min: 0, max: 60, step: 1, def: 16 }, { k: "mono", label: "Mono", type: "bool", def: true }] }
+    };
+
+    function loadEf() {
+        var e = {}; try { e = (JSON.parse(localStorage.getItem("kage_settings") || "{}").ef) || {}; } catch (x) {}
+        return {
+            len: e.len || 16, decay: (e.decay != null ? e.decay : 82), spacing: e.spacing || 1,
+            opacity: (e.opacity != null ? e.opacity : 85), blur: (e.blur != null ? e.blur : 2),
+            color: e.color || "shadow", custom: e.custom || "#8b5cf6", position: e.position || "behind",
+            chain: Array.isArray(e.chain) ? e.chain : []
+        };
+    }
+    var ef = loadEf(), efReady = false, efBusy = false;
+    function saveEf() { settings.ef = ef; saveSettings(); }
+
+    function efParamRow(item, d) {
+        var row = el("div", "ef-prow"), lab = el("label"); lab.textContent = d.label; row.appendChild(lab);
+        if (d.type === "select") {
+            var sel = el("select", "select");
+            d.options.forEach(function (o) { var op = document.createElement("option"); op.value = o; op.textContent = o; sel.appendChild(op); });
+            sel.value = item.params[d.k]; sel.onchange = function () { item.params[d.k] = sel.value; saveEf(); };
+            row.appendChild(sel);
+        } else if (d.type === "bool") {
+            var cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = !!item.params[d.k]; cb.style.marginLeft = "auto";
+            cb.onchange = function () { item.params[d.k] = cb.checked; saveEf(); }; row.appendChild(cb);
+        } else {
+            var rng = document.createElement("input"); rng.type = "range"; rng.min = d.min; rng.max = d.max; rng.step = d.step; rng.value = item.params[d.k];
+            var val = el("span", "ef-pval"); var fmt = function (v) { return d.step < 1 ? (+v).toFixed(2) : ("" + v); };
+            val.textContent = fmt(rng.value);
+            rng.oninput = function () { item.params[d.k] = +rng.value; val.textContent = fmt(rng.value); }; rng.onchange = saveEf;
+            row.appendChild(rng); row.appendChild(val);
+        }
+        return row;
+    }
+    function renderEfChain() {
+        var c = $("ef-chain"); c.innerHTML = "";
+        if (!ef.chain.length) { var e = el("div", "ef-empty"); e.textContent = "No effects yet — add one above to shape your trails."; c.appendChild(e); return; }
+        ef.chain.forEach(function (item, i) {
+            var d = FX_DEFS[item.fx]; if (!d) return;
+            var row = el("div", "ef-row " + (item.on ? "on" : "off"));
+            var head = el("div", "ef-row-head");
+            var tog = el("div", "ef-tog"); tog.title = "Enable / disable";
+            tog.onclick = function () { item.on = !item.on; row.classList.toggle("on", item.on); row.classList.toggle("off", !item.on); saveEf(); };
+            var name = el("div", "ef-row-name"); name.textContent = d.label;
+            var up = el("button", "ef-mini"); up.appendChild(icon("up")); up.onclick = function () { efMove(i, -1); };
+            var dn = el("button", "ef-mini"); dn.appendChild(icon("down")); dn.onclick = function () { efMove(i, 1); };
+            var del = el("button", "ef-mini del"); del.appendChild(icon("x")); del.onclick = function () { ef.chain.splice(i, 1); saveEf(); renderEfChain(); };
+            head.appendChild(tog); head.appendChild(name); head.appendChild(up); head.appendChild(dn); head.appendChild(del);
+            row.appendChild(head);
+            if (d.params.length) { var pc = el("div", "ef-row-params"); d.params.forEach(function (pd) { pc.appendChild(efParamRow(item, pd)); }); row.appendChild(pc); }
+            c.appendChild(row);
+        });
+    }
+    function efMove(i, dir) { var j = i + dir; if (j < 0 || j >= ef.chain.length) return; var t = ef.chain[i]; ef.chain[i] = ef.chain[j]; ef.chain[j] = t; saveEf(); renderEfChain(); }
+    function efAddFx(key) { var d = FX_DEFS[key]; if (!d) return; var p = {}; d.params.forEach(function (x) { p[x.k] = x.def; }); ef.chain.push({ fx: key, on: true, params: p }); saveEf(); renderEfChain(); }
+    function efApplyControls() {
+        $("ef-len").value = ef.len; $("ef-len-val").textContent = ef.len;
+        $("ef-decay").value = ef.decay; $("ef-decay-val").textContent = (ef.decay / 100).toFixed(2);
+        $("ef-spacing").value = ef.spacing; $("ef-spacing-val").textContent = ef.spacing;
+        $("ef-opacity").value = ef.opacity; $("ef-opacity-val").textContent = ef.opacity + "%";
+        $("ef-blur").value = ef.blur; $("ef-blur-val").textContent = ef.blur;
+        $("ef-custom").value = ef.custom;
+        Array.prototype.forEach.call(document.querySelectorAll("#ef-color button"), function (b) { b.classList.toggle("active", b.dataset.c === ef.color); });
+        $("ef-custom-row").classList.toggle("hidden", ef.color !== "custom");
+        Array.prototype.forEach.call(document.querySelectorAll("#ef-position button"), function (b) { b.classList.toggle("active", b.dataset.p === ef.position); });
+    }
+    function efBindControls() {
+        $("ef-len").oninput = function () { ef.len = +this.value; $("ef-len-val").textContent = ef.len; }; $("ef-len").onchange = saveEf;
+        $("ef-decay").oninput = function () { ef.decay = +this.value; $("ef-decay-val").textContent = (ef.decay / 100).toFixed(2); }; $("ef-decay").onchange = saveEf;
+        $("ef-spacing").oninput = function () { ef.spacing = +this.value; $("ef-spacing-val").textContent = ef.spacing; }; $("ef-spacing").onchange = saveEf;
+        $("ef-opacity").oninput = function () { ef.opacity = +this.value; $("ef-opacity-val").textContent = ef.opacity + "%"; }; $("ef-opacity").onchange = saveEf;
+        $("ef-blur").oninput = function () { ef.blur = +this.value; $("ef-blur-val").textContent = ef.blur; }; $("ef-blur").onchange = saveEf;
+        $("ef-custom").oninput = function () { ef.custom = this.value; }; $("ef-custom").onchange = saveEf;
+        Array.prototype.forEach.call(document.querySelectorAll("#ef-color button"), function (b) { b.onclick = function () { ef.color = b.dataset.c; efApplyControls(); saveEf(); }; });
+        Array.prototype.forEach.call(document.querySelectorAll("#ef-position button"), function (b) { b.onclick = function () { ef.position = b.dataset.p; efApplyControls(); saveEf(); }; });
+        var sel = $("ef-add-sel"); sel.innerHTML = ""; FX_ORDER.forEach(function (k) { var o = document.createElement("option"); o.value = k; o.textContent = FX_DEFS[k].label; sel.appendChild(o); });
+        $("ef-add-btn").onclick = function () { efAddFx($("ef-add-sel").value); };
+        $("ef-run").onclick = efRun;
+        $("ef-refresh").onclick = refreshEfSelection;
+    }
+    function refreshEfSelection() {
+        cs.evalScript("acl_getSelection()", function (out) {
+            var p = (out || "").split(HOST_SEP);
+            if (p[0] === "comp" || p[0] === "layer") { $("ef-src-name").textContent = p[1]; $("ef-src-sub").textContent = (p[0] === "layer" ? "Layer in " + p[2] : "Composition") + " — ready"; }
+            else { $("ef-src-name").textContent = "No selection"; $("ef-src-sub").textContent = "Select a clip or composition in your AE timeline, then Refresh"; }
+        });
+    }
+    function efConfig() {
+        return {
+            effect: "kage-trails", length: ef.len, decay: +(ef.decay / 100).toFixed(3), spacing: ef.spacing,
+            opacity: +(ef.opacity / 100).toFixed(3), blur: ef.blur, mode: ef.color, custom: ef.custom, position: ef.position,
+            fx: ef.chain.filter(function (c) { return c.on; }).map(function (c) { return { name: c.fx, params: c.params }; })
+        };
+    }
+    function efRun() {
+        if (efBusy) return;
+        if (!child_process) { toast("Node access unavailable.", "err"); return; }
+        if (!settings.ffmpeg) { toast("Set ffmpeg in Settings first.", "err"); openSettings(); return; }
+        var root = extRoot();
+        var runpy = root ? path.join(root, "engine", "run.py") : null;
+        if (!runpy || !fs.existsSync(runpy)) { toast("Kage Trails engine not found (engine/run.py).", "err"); return; }
+        var py = settings.python || "python";
+        var work = path.join(os.tmpdir(), "KageTrails", String(Date.now())); ensureFolder(work);
+        var cfgPath = path.join(work, "config.json");
+        var outDir = path.join(settings.dlFolder, "Kage Trails"); ensureFolder(outDir);
+        var log = $("ef-log"); log.classList.remove("hidden"); log.textContent = "";
+        var nframes = 0;
+        function efLog(s) { log.textContent = (log.textContent + s).slice(-4000); log.scrollTop = log.scrollHeight; }
+        function onData(s) {
+            efLog(s);
+            if (/FRAMES (\d+)/.test(s)) nframes = parseInt(RegExp.$1, 10) || 0;
+            if (/SEG (\d+)\/(\d+)/.test(s)) { var i = +RegExp.$1, n = +RegExp.$2 || 1; showProgress("Isolating subject… (" + i + "/" + n + ")", 16 + (i / n) * 56); }
+            else if (/TRAILS/.test(s)) showProgress("Drawing trails + FX…", 78);
+            else if (/ENCODE/.test(s)) showProgress("Encoding…", 90);
+        }
+        efBusy = true; $("ef-run").disabled = true;
+        showProgress("Rendering selection from After Effects…", 4);
+        var renderBase = path.join(work, "render"), renderInfo = null;
+        callRender(renderBase).then(function (r) {
+            if (!r.ok) throw new Error(r.message);
+            renderInfo = r;
+            if (!r.renderedPath || fileSize(r.renderedPath) === 0) throw new Error("After Effects didn't produce a render. " + (r.renderedPath || ""));
+            fs.writeFileSync(cfgPath, JSON.stringify(efConfig()));
+            var out = path.join(outDir, sanitize((r.compName || "comp") + "_trails", "mp4"));
+            showProgress("Starting Kage Trails engine…", 10);
+            return run(py, [runpy, "--input", r.renderedPath, "--out", out, "--config", cfgPath, "--ffmpeg", settings.ffmpeg, "--tmp", work], onData).then(function () { return out; });
+        }).then(function (out) {
+            showProgress("Placing on the timeline…", 96);
+            return placeInterp(out, renderInfo.compId, renderInfo.spanStart).then(function (res) { rmrf(work); return res; });
+        }).then(function (res) {
+            hideProgress(); efBusy = false; $("ef-run").disabled = false;
+            if (res && res.ok) { toast(res.message || "Kage Trails applied.", "ok"); if (settings.openAfter) openInExplorer(outDir); }
+            else toast((res && res.message) || "Failed.", "err");
+        }).catch(function (err) { rmrf(work); hideProgress(); efBusy = false; $("ef-run").disabled = false; $("ef-log").textContent += "\nError: " + err.message; toast("Failed: " + err.message, "err"); });
+    }
+    function efInit() {
+        if (!efReady) { efBindControls(); efReady = true; }
+        efApplyControls(); renderEfChain(); refreshEfSelection();
+    }
+
+    // =========================================================
     //  Views
     // =========================================================
     function switchView(v) {
@@ -887,8 +1056,10 @@
         $("view-clips").classList.toggle("hidden", v !== "clips");
         $("view-kaizen").classList.toggle("hidden", v !== "kaizen");
         $("view-graph").classList.toggle("hidden", v !== "graph");
+        $("view-effects").classList.toggle("hidden", v !== "effects");
         $("view-assets").classList.toggle("hidden", v !== "assets");
         if (v === "clips") footer.classList.toggle("hidden", !(pack && navStack.length));
+        else if (v === "effects") { footer.classList.add("hidden"); efInit(); }
         else if (v === "graph") { footer.classList.add("hidden"); grInit(); }
         else if (v === "kaizen") { footer.classList.add("hidden"); applyKzUI(); detectRifeModels(); refreshKzSelection(); }
         else if (v === "assets") {
@@ -918,6 +1089,7 @@
         $("btn-pickffmpeg").onclick = function () { pickInto("ffmpeg", "Select ffmpeg.exe", ["exe"], "ffmpeg-path"); };
         $("btn-pickesrgan").onclick = function () { pickInto("realesrgan", "Select realesrgan-ncnn-vulkan.exe", ["exe"], "realesrgan-path"); };
         $("btn-pickrife").onclick = function () { pickInto("rife", "Select rife-ncnn-vulkan.exe", ["exe"], "rife-path"); detectRifeModels(); };
+        $("btn-pickpython").onclick = function () { pickInto("python", "Select python.exe", ["exe"], "python-path"); };
         $("btn-setup-tools").onclick = setupTools;
         $("link-ffmpeg").onclick = function (e) { e.preventDefault(); openURL("https://www.gyan.dev/ffmpeg/builds/"); };
         $("link-esrgan").onclick = function (e) { e.preventDefault(); openURL("https://github.com/xinntao/Real-ESRGAN/releases"); };
@@ -950,6 +1122,7 @@
         $("in-model").onchange = function () { kz.inModel = this.value; saveKz(); };
 
         Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (t) { t.onclick = function () { switchView(t.dataset.view); }; });
+        if (EFFECTS_BETA) { var te = $("tab-effects"); if (te) te.classList.remove("hidden"); }
 
         // update banner
         $("ub-update").onclick = startUpdate;
