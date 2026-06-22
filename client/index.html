@@ -35,6 +35,10 @@
         <symbol id="i-graph" viewBox="0 0 24 24"><path d="M3 21C3 21 5 4 21 3"/><circle cx="3" cy="21" r="1.6" fill="currentColor" stroke="none"/><circle cx="21" cy="3" r="1.6" fill="currentColor" stroke="none"/></symbol>
         <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l3 3v15a0 0 0 0 1 0 0H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M8 3v5h7V3"/><rect x="8" y="13" width="8" height="6"/></symbol>
         <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M5 13c-1.5 1-2 5-2 5s4-.5 5-2"/><path d="M12 15l-3-3c1-5 4-9 11-9 0 7-4 10-9 11z"/><circle cx="15" cy="9" r="1.4" fill="currentColor" stroke="none"/></symbol>
+        <symbol id="i-fx" viewBox="0 0 24 24"><path d="M5 3l1.2 3.2L9.4 7.4 6.2 8.6 5 11.8 3.8 8.6.6 7.4 3.8 6.2z" fill="currentColor" stroke="none"/><path d="M15 9l1.8 4.6L21.4 15l-4.6 1.8L15 21l-1.8-4.2L8.6 15l4.6-1.4z" fill="currentColor" stroke="none"/></symbol>
+        <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+        <symbol id="i-up" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></symbol>
+        <symbol id="i-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
     </svg>
 
     <div id="bg-layer"></div>
@@ -64,6 +68,7 @@
             <button class="tab active" data-view="clips"><svg class="ic"><use href="#i-film"/></svg><span>Clips</span></button>
             <button class="tab" data-view="kaizen"><svg class="ic"><use href="#i-kaizen"/></svg><span>Kaizen</span></button>
             <button class="tab" data-view="graph"><svg class="ic"><use href="#i-graph"/></svg><span>Graph</span></button>
+            <button class="tab hidden" id="tab-effects" data-view="effects"><svg class="ic"><use href="#i-fx"/></svg><span>Effects</span></button>
             <button class="tab" data-view="assets"><svg class="ic"><use href="#i-assets"/></svg><span>Assets</span></button>
         </div>
 
@@ -203,6 +208,56 @@
             </main>
         </div>
 
+        <!-- ===================== EFFECTS VIEW (Kage Trails + FX chain) ===================== -->
+        <div id="view-effects" class="view hidden">
+            <main id="effects-content">
+                <div class="up-source-card">
+                    <div class="up-thumb"><svg class="ic"><use href="#i-fx"/></svg></div>
+                    <div class="up-source-info">
+                        <div id="ef-src-name" class="up-src-name">No selection</div>
+                        <div id="ef-src-sub" class="muted tiny">Select a clip or composition in your AE timeline</div>
+                    </div>
+                    <button id="ef-refresh" class="ghost-btn">Refresh</button>
+                </div>
+
+                <div class="ef-head">
+                    <div class="ef-title"><svg class="ic"><use href="#i-fx"/></svg> Kage Trails <span class="ef-kanji">影</span></div>
+                    <span class="ef-badge">PRO</span>
+                </div>
+
+                <div class="kz-options ef-block">
+                    <div class="kz-optgroup">
+                        <div class="kz-opt-title">Trails</div>
+                        <div class="up-row"><span class="up-lbl">Length</span><input type="range" id="ef-len" min="2" max="40" value="16" /><span id="ef-len-val" class="up-val">16</span></div>
+                        <div class="up-row"><span class="up-lbl">Decay</span><input type="range" id="ef-decay" min="40" max="98" value="82" /><span id="ef-decay-val" class="up-val">0.82</span></div>
+                        <div class="up-row"><span class="up-lbl">Spacing</span><input type="range" id="ef-spacing" min="1" max="6" value="1" /><span id="ef-spacing-val" class="up-val">1</span></div>
+                        <div class="up-row"><span class="up-lbl">Opacity</span><input type="range" id="ef-opacity" min="0" max="100" value="85" /><span id="ef-opacity-val" class="up-val">85%</span></div>
+                        <div class="up-row"><span class="up-lbl">Blur</span><input type="range" id="ef-blur" min="0" max="12" value="2" /><span id="ef-blur-val" class="up-val">2</span></div>
+                        <div class="up-row"><span class="up-lbl">Color</span>
+                            <div class="seg" id="ef-color"><button data-c="shadow" class="active">Shadow</button><button data-c="accent">Accent</button><button data-c="rgb">RGB</button><button data-c="custom">Custom</button></div>
+                        </div>
+                        <div class="up-row hidden" id="ef-custom-row"><span class="up-lbl">Custom</span><input type="color" id="ef-custom" value="#8b5cf6" class="ef-color-input" /></div>
+                        <div class="up-row"><span class="up-lbl">Position</span>
+                            <div class="seg" id="ef-position"><button data-p="behind" class="active">Behind</button><button data-p="front">In front</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ef-fx-head">
+                    <span class="kz-opt-title" style="margin:0;"><svg class="ic"><use href="#i-fx"/></svg> Trail FX chain</span>
+                    <div class="ef-add">
+                        <select id="ef-add-sel" class="select"></select>
+                        <button id="ef-add-btn" class="ghost-btn">+ Add</button>
+                    </div>
+                </div>
+                <div id="ef-chain" class="ef-chain"></div>
+
+                <button id="ef-run" class="wide-btn run-btn"><svg class="ic"><use href="#i-fx"/></svg> Run</button>
+                <p class="muted tiny" style="margin-top:10px;">Renders your AE selection, isolates the subject, draws the trails with your FX chain, and drops the result back on the timeline.</p>
+                <pre id="ef-log" class="up-log hidden"></pre>
+            </main>
+        </div>
+
         <!-- ===================== ASSETS VIEW ===================== -->
         <div id="view-assets" class="view hidden">
             <div id="assets-bar">
@@ -316,6 +371,10 @@
                 <div class="settings-row">
                     <input id="rife-path" type="text" readonly placeholder="rife-ncnn-vulkan.exe — not set" />
                     <button id="btn-pickrife" class="ghost-btn">Set</button>
+                </div>
+                <div class="settings-row">
+                    <input id="python-path" type="text" readonly placeholder="python — on PATH by default (for Effects)" />
+                    <button id="btn-pickpython" class="ghost-btn">Set</button>
                 </div>
                 <div class="set-links">
                     <a id="link-ffmpeg" href="#">ffmpeg ↗</a>
